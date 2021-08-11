@@ -1391,6 +1391,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
             throw new SQLException("validateConnection: connection closed");
         }
 
+        // 使用有效连接检查器
         if (validConnectionChecker != null) {
             boolean result;
             Exception error = null;
@@ -1423,6 +1424,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
             return;
         }
 
+        // 使用连接执行 验证查询
         if (null != query) {
             Statement stmt = null;
             ResultSet rs = null;
@@ -1656,7 +1658,8 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
         if (getProxyFilters().size() == 0) {
             conn = getDriver().connect(url, info);
         } else {
-            conn = new FilterChainImpl(this).connection_connect(info);
+            conn = new FilterChainImpl(this)
+                    .connection_connect(info);
         }
 
         createCountUpdater.incrementAndGet(this);
@@ -1720,6 +1723,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
         createStartNanosUpdater.set(this, connectStartNanos);
         creatingCountUpdater.incrementAndGet(this);
         try {
+            // 创建物理连接
             conn = createPhysicalConnection(url, physicalConnectProperties);
             connectedNanos = System.nanoTime();
 
@@ -1727,6 +1731,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
                 throw new SQLException("connect error, url " + url + ", driverClass " + this.driverClass);
             }
 
+            // 初始化物理连接
             initPhysicalConnection(conn, variables, globalVariables);
             initedNanos = System.nanoTime();
 
@@ -1754,6 +1759,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
             creatingCountUpdater.decrementAndGet(this);
         }
 
+        // 包装
         return new PhysicalConnectionInfo(conn, connectStartNanos, connectedNanos, initedNanos, validatedNanos, variables, globalVariables);
     }
 
@@ -1847,6 +1853,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
         try {
             stmt = conn.createStatement();
 
+            // 执行初始化sql语句
             for (String sql : initSqls) {
                 if (sql == null) {
                     continue;
@@ -1857,6 +1864,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
 
             DbType dbType = DbType.of(this.dbTypeName);
             if (dbType == DbType.mysql || dbType == DbType.ads) {
+                // 初始化变量
                 if (variables != null) {
                     ResultSet rs = null;
                     try {
@@ -1871,6 +1879,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter implements 
                     }
                 }
 
+                // 初始化全局变量
                 if (globalVariables != null) {
                     ResultSet rs = null;
                     try {

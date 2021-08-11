@@ -185,6 +185,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
     public DruidDataSource(boolean fairLock){
         super(fairLock);
 
+        // 配置 来自 系统属性
         configFromPropety(System.getProperties());
     }
 
@@ -703,6 +704,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             throw new IllegalArgumentException("maxActive can't not set zero");
         }
 
+        // 未初始化
         if (!inited) {
             this.maxActive = maxActive;
             return;
@@ -716,6 +718,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             LOG.info("maxActive changed : " + this.maxActive + " -> " + maxActive);
         }
 
+        // 初始化完成 增加连接数
         lock.lock();
         try {
             int allCount = this.poolingCount + this.activeCount;
@@ -878,12 +881,15 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 this.driverClass = driverClass.trim();
             }
 
+            // 初始化spi服务
             initFromSPIServiceLoader();
 
+            // 解析驱动程序
             resolveDriver();
 
             initCheck();
 
+            // 初始化异常种类
             initExceptionSorter();
             initValidConnectionChecker();
             validationQueryCheck();
@@ -902,22 +908,30 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             }
             dataSourceStat.setResetStatEnable(this.resetStatEnable);
 
+            // 初始化激活连接数组
             connections = new DruidConnectionHolder[maxActive];
+            // 驱除连接数组
             evictConnections = new DruidConnectionHolder[maxActive];
+            // 初始化保持活动连接数组
             keepAliveConnections = new DruidConnectionHolder[maxActive];
 
             SQLException connectError = null;
 
+            // 异步创建
             if (createScheduler != null && asyncInit) {
                 for (int i = 0; i < initialSize; ++i) {
                     submitCreateTask(true);
                 }
-            } else if (!asyncInit) {
+            }
+            // 同步创建
+            else if (!asyncInit) {
+                // 初始化连接
                 // init connections
                 while (poolingCount < initialSize) {
                     try {
                         PhysicalConnectionInfo pyConnectInfo = createPhysicalConnection();
                         DruidConnectionHolder holder = new DruidConnectionHolder(this, pyConnectInfo);
+                        // 放入连接池数组
                         connections[poolingCount++] = holder;
                     } catch (SQLException ex) {
                         LOG.error("init datasource error, url: " + this.getUrl(), ex);
@@ -931,11 +945,13 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
 
                 if (poolingCount > 0) {
+                    // 设置连接池峰值
                     poolingPeak = poolingCount;
                     poolingPeakTime = System.currentTimeMillis();
                 }
             }
 
+            // 创建线程
             createAndLogThread();
             createAndStartCreatorThread();
             createAndStartDestroyThread();
@@ -1092,6 +1108,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
     }
 
     /**
+     * 从 SPI ServiceLoader 加载过滤器
      * load filters from SPI ServiceLoader
      * 
      * @see ServiceLoader
@@ -1199,15 +1216,19 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 this.driverClass = JdbcUtils.getDriverClassName(this.jdbcUrl);
             }
 
+            // mock驱动
             if (MockDriver.class.getName().equals(driverClass)) {
                 driver = MockDriver.instance;
-            } else if ("com.alibaba.druid.support.clickhouse.BalancedClickhouseDriver".equals(driverClass)) {
+            }
+            // BalancedClickhouseDriver
+            else if ("com.alibaba.druid.support.clickhouse.BalancedClickhouseDriver".equals(driverClass)) {
                 Properties info = new Properties();
                 info.put("user", username);
                 info.put("password", password);
                 info.putAll(connectProperties);
                 driver = new BalancedClickhouseDriver(jdbcUrl, info);
-            } else {
+            }
+            else {
                 if (jdbcUrl == null && (driverClass == null || driverClass.length() == 0)) {
                     throw new SQLException("url not set");
                 }

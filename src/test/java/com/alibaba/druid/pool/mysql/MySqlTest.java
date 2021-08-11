@@ -16,13 +16,15 @@ public class MySqlTest extends TestCase {
 
     protected void setUp() throws Exception {
         dataSource = new DruidDataSource();
-        dataSource.setUrl("jdbc:mysql://raspberrypi_mysql:3306/druid_test_db?allowMultiQueries=true");
-        dataSource.setUsername("druid_test");
-        dataSource.setPassword("druid_test");
+        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/test?allowMultiQueries=true&serverTimezone=Asia/Shanghai");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
         dataSource.setFilters("log4j");
         dataSource.setValidationQuery("SELECT 1");
         dataSource.setTestOnBorrow(true);
         dataSource.setTestWhileIdle(true);
+        dataSource.setMaxActive(10);
+        dataSource.setInitialSize(10);
     }
 
     protected void tearDown() throws Exception {
