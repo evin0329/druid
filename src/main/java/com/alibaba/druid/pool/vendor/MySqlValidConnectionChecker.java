@@ -104,6 +104,7 @@ public class MySqlValidConnectionChecker extends ValidConnectionCheckerAdapter i
                 }
 
                 try {
+                    // 调用ping mysql
                     ping.invoke(conn, true, validationQueryTimeout * 1000);
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
@@ -116,6 +117,7 @@ public class MySqlValidConnectionChecker extends ValidConnectionCheckerAdapter i
             }
         }
 
+        // 执行查询 验证查询 语句
         String query = validateQuery;
         if (validateQuery == null || validateQuery.isEmpty()) {
             query = DEFAULT_VALIDATION_QUERY;

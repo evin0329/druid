@@ -1704,12 +1704,13 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
 
                 if (holder != null) {
+                    // 丢弃
                     if (holder.discard) {
                         continue;
                     }
 
                     activeCount++;
-                    holder.active = true;
+                    holder.active = true;               // 标记激活
                     if (activeCount > activePeak) {
                         activePeak = activeCount;
                         activePeakTime = System.currentTimeMillis();
